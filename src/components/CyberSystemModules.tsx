@@ -109,7 +109,7 @@ const CyberSystemModules = ({
   title: string;
   data: SystemCard[];
   activeModule?: string | null;
-  onModuleClick?: (id: string) => void;
+  onModuleClick?: (card: SystemCard) => void;
 }) => {
   // 状态管理
   const [glitchingCards, setGlitchingCards] = useState<Record<string, boolean>>(
@@ -169,9 +169,11 @@ const CyberSystemModules = ({
 
   // 处理卡片点击，对外传递模块点击事件
   const handleCardClick = useCallback(
-    (cardId: string) => {
+    (card: SystemCard) => {
+      const cardId = card.id;
+
       if (onModuleClick) {
-        onModuleClick(cardId);
+        onModuleClick(card);
       }
 
       // 触发卡片故障
@@ -280,7 +282,7 @@ const CyberSystemModules = ({
                 ${glitchingCards[card.id] ? 'cyber-glitch-active' : ''}
                 ${isHologram ? 'hologram-active' : ''}
               `}
-              onClick={() => handleCardClick(card.id)}
+              onClick={() => handleCardClick(card)}
               ref={setCardRef(card.id)}
               data-text={card.title}
             >

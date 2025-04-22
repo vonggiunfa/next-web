@@ -3,7 +3,9 @@
 import CyberButton from '@/components/CyberButton';
 import CyberLogo from '@/components/CyberLogo';
 import CyberpunkLayout from '@/components/CyberpunkLayout';
-import CyberSystemModules from '@/components/CyberSystemModules';
+import CyberSystemModules, {
+  SystemCard,
+} from '@/components/CyberSystemModules';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { data1, data2, data3, data4 } from './mock-data';
@@ -161,9 +163,13 @@ const Page = () => {
   };
 
   // 处理模块点击
-  const handleModuleClick = (moduleId: string) => {
+  const handleModuleClick = (card: SystemCard) => {
     // 只设置激活的模块ID，不再处理跳转逻辑（已由CyberSystemModules组件内部处理）
-    setActiveModuleId(moduleId);
+    setActiveModuleId(card.id);
+
+    setTimeout(() => {
+      window.open(card.url, '_blank');
+    }, 500);
   };
 
   // 使用useCallback缓存计算函数，避免不必要的重渲染
