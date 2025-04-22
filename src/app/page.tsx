@@ -59,10 +59,29 @@ const tabs = [
     label: '人事協同',
     value: 'humanResources',
     data: formatData(data1),
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
   },
-  { id: 1, label: '店舖銷售', value: 'sales', data: formatData(data2) },
-  { id: 2, label: '採購倉儲', value: 'procurement', data: formatData(data3) },
-  { id: 3, label: '數據中台', value: 'dataCenter', data: formatData(data4) },
+  {
+    id: 1,
+    label: '店舖銷售',
+    value: 'sales',
+    data: formatData(data2),
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`,
+  },
+  {
+    id: 2,
+    label: '採購倉儲',
+    value: 'procurement',
+    data: formatData(data3),
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`,
+  },
+  {
+    id: 3,
+    label: '數據中台',
+    value: 'dataCenter',
+    data: formatData(data4),
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
+  },
 ];
 
 // 定义logo组件动画
@@ -185,6 +204,9 @@ const Page = () => {
       return;
     }
 
+    // 检测是否为移动设备视图 (小于768px的屏幕宽度)
+    const isMobileView = window.innerWidth < 768;
+
     // 获取容器的位置信息
     const containerRect = containerRef.current.getBoundingClientRect();
     const containerTop = containerRect.top;
@@ -202,7 +224,10 @@ const Page = () => {
     const moduleTop = moduleRect.top - containerTop;
 
     // 计算斜线高度（确保形成45度角）
-    const verticalDistance = Math.min((moduleTop - buttonBottom) * 0.3, 60);
+    // 在移动设备上使用更小的垂直距离，更简洁的连接线
+    const verticalDistance = isMobileView
+      ? Math.min((moduleTop - buttonBottom) * 0.2, 40)
+      : Math.min((moduleTop - buttonBottom) * 0.3, 60);
 
     // 第一个斜线：从按钮底部开始的45度线
     const isRightDirection = moduleCenterX > buttonCenterX;
@@ -215,10 +240,13 @@ const Page = () => {
       moduleCenterX - (isRightDirection ? verticalDistance : -verticalDistance);
 
     // 构建完整的路径字符串
-    const pathStr = `M${buttonCenterX},${buttonBottom} 
-                    L${diagX1},${diagY1} 
-                    L${diagX2},${diagY1} 
-                    L${moduleCenterX},${moduleTop}`;
+    // 移动设备上简化为直线，桌面则保持原来的折线路径
+    const pathStr = isMobileView
+      ? `M${buttonCenterX},${buttonBottom} L${moduleCenterX},${moduleTop}`
+      : `M${buttonCenterX},${buttonBottom} 
+         L${diagX1},${diagY1} 
+         L${diagX2},${diagY1} 
+         L${moduleCenterX},${moduleTop}`;
 
     setLinePath(pathStr);
 
@@ -293,8 +321,8 @@ const Page = () => {
             <CyberLogo />
           </motion.div>
 
-          {/* 标签按钮区域 - 直接执行动画，不等待Logo */}
-          <div className="flex justify-evenly items-center mt-24 relative">
+          {/* 标签按钮区域 - 添加响应式布局 */}
+          <div className="flex justify-evenly items-center mt-16 md:mt-24 relative px-2 md:px-4">
             {tabs.map((tab, index) => (
               <motion.div
                 key={tab.value}
@@ -305,6 +333,7 @@ const Page = () => {
                 initial="hidden"
                 animate="visible"
                 custom={index}
+                className="mx-1 md:mx-2"
                 onAnimationComplete={() => {
                   // 只有最后一个按钮完成时才增加计数
                   if (index === tabs.length - 1) {
@@ -316,6 +345,7 @@ const Page = () => {
                   className="mb-2"
                   isActive={activeTabIndex === tab.id}
                   onClick={() => handleTabChange(tab.id)}
+                  icon={tab.icon}
                 >
                   {tab.label}
                 </CyberButton>
@@ -346,7 +376,7 @@ const Page = () => {
           {/* 模块容器 - 直接执行动画，不等待其他元素 */}
           <motion.div
             ref={moduleRef}
-            className="flex justify-center items-center mt-24"
+            className="flex justify-center items-center mt-16 md:mt-24"
             variants={moduleContainerVariants}
             initial="hidden"
             animate="visible"

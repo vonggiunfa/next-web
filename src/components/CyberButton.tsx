@@ -8,6 +8,7 @@ interface CyberButtonProps {
   className?: string;
   isActive?: boolean;
   onClick?: () => void;
+  icon?: string;
 }
 
 const CyberButton = ({
@@ -15,32 +16,42 @@ const CyberButton = ({
   className = '',
   isActive = false,
   onClick,
+  icon,
 }: CyberButtonProps) => {
   const [showGlitch, setShowGlitch] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const glitchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const glitchPositionRef = useRef(Math.floor(Math.random() * 100));
+  const [isMobileView, setIsMobileView] = useState(false);
 
-  // 当 isActive 变化时处理故障效果
   useEffect(() => {
-    // 立即清除之前的任何动画状态
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+
+    checkMobileView();
+
+    window.addEventListener('resize', checkMobileView);
+
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
+
+  useEffect(() => {
     if (glitchTimeoutRef.current) {
       clearTimeout(glitchTimeoutRef.current);
     }
 
     if (isActive) {
-      // 更新随机位置
       glitchPositionRef.current = Math.floor(Math.random() * 100);
 
-      // 激活故障效果
       setShowGlitch(true);
 
-      // 设置定时器，800ms 后隐藏故障效果
       glitchTimeoutRef.current = setTimeout(() => {
         setShowGlitch(false);
       }, 800);
     } else {
-      // 确保非激活状态下故障效果被关闭
       setShowGlitch(false);
     }
 
@@ -51,10 +62,21 @@ const CyberButton = ({
     };
   }, [isActive]);
 
+  const renderIcon = () => {
+    if (!icon) return null;
+    return (
+      <span
+        className="inline-block"
+        dangerouslySetInnerHTML={{ __html: icon }}
+      />
+    );
+  };
+
   return (
     <button
       className={twMerge(
-        'relative cursor-pointer py-4 px-8',
+        'relative cursor-pointer',
+        isMobileView ? 'py-2 px-2' : 'py-4 px-8',
         'text-[1.2rem] uppercase',
         'border border-white/30 font-black transition-all duration-300',
         'transform-gpu overflow-hidden bg-black/40 backdrop-blur-sm',
@@ -67,47 +89,67 @@ const CyberButton = ({
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      aria-label={typeof children === 'string' ? children.toString() : 'Button'}
     >
-      {/* 扫描线效果 - 更加微妙 */}
       <div className="absolute inset-0 bg-[linear-gradient(transparent_0%,transparent_97%,rgba(255,255,255,0.15)_100%)] bg-[length:100%_3px] opacity-20 pointer-events-none" />
 
-      {/* 噪点纹理 */}
       <div className="absolute inset-0 mix-blend-overlay opacity-5 bg-noise pointer-events-none" />
 
-      {/* 边框效果 - 水平 */}
       <div
         className={twMerge(
           'absolute w-[calc(100%-30px)] h-[calc(100%-20px)] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
           'border-t border-b border-white/40 transition-all duration-300',
+          isMobileView
+            ? 'w-[calc(100%-10px)] h-[calc(100%-8px)]'
+            : 'w-[calc(100%-30px)] h-[calc(100%-20px)]',
           isActive && 'w-[calc(100%+10px)] h-[calc(100%+5px)] border-white/60'
         )}
       />
 
-      {/* 边框效果 - 垂直 */}
       <div
         className={twMerge(
           'absolute w-[calc(100%-20px)] h-[calc(100%-30px)] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
           'border-l border-r border-white/40 transition-all duration-300',
+          isMobileView
+            ? 'w-[calc(100%-8px)] h-[calc(100%-10px)]'
+            : 'w-[calc(100%-20px)] h-[calc(100%-30px)]',
           isActive && 'w-[calc(100%+5px)] h-[calc(100%+10px)] border-white/60'
         )}
       />
 
-      {/* 角落装饰 - 只在激活状态下显示 */}
       {isActive && (
         <>
-          <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-white/80 animate-corner-appear"></div>
-          <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-white/80 animate-corner-appear"></div>
-          <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-white/80 animate-corner-appear"></div>
-          <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-white/80 animate-corner-appear"></div>
+          <div
+            className={twMerge(
+              'absolute top-0 left-0 border-t-2 border-l-2 border-white/80 animate-corner-appear',
+              isMobileView ? 'w-2 h-2' : 'w-3 h-3'
+            )}
+          ></div>
+          <div
+            className={twMerge(
+              'absolute top-0 right-0 border-t-2 border-r-2 border-white/80 animate-corner-appear',
+              isMobileView ? 'w-2 h-2' : 'w-3 h-3'
+            )}
+          ></div>
+          <div
+            className={twMerge(
+              'absolute bottom-0 left-0 border-b-2 border-l-2 border-white/80 animate-corner-appear',
+              isMobileView ? 'w-2 h-2' : 'w-3 h-3'
+            )}
+          ></div>
+          <div
+            className={twMerge(
+              'absolute bottom-0 right-0 border-b-2 border-r-2 border-white/80 animate-corner-appear',
+              isMobileView ? 'w-2 h-2' : 'w-3 h-3'
+            )}
+          ></div>
         </>
       )}
 
-      {/* 背景效果 - 激活时显示，简化为单一动画 */}
       {isActive && (
         <div className="absolute inset-0 z-[-1] bg-[linear-gradient(135deg,transparent_25%,rgba(255,255,255,0.07)_50%,transparent_75%)] animate-sweep opacity-70"></div>
       )}
 
-      {/* 故障效果 - 简化且不使用无限动画，避免卡顿 */}
       {showGlitch && (
         <>
           <div className="absolute top-[30%] left-0 w-full h-[1px] bg-white/70 z-[4] animate-h-glitch-once"></div>
@@ -118,10 +160,10 @@ const CyberButton = ({
         </>
       )}
 
-      {/* 按钮文本 */}
       <span
         className={twMerge(
-          'relative px-2 inline-block text-lg',
+          'relative inline-block',
+          isMobileView ? 'px-1 text-base' : 'px-2 text-lg',
           isActive
             ? 'text-white font-bold tracking-wider'
             : 'text-white/90 tracking-wide',
@@ -130,12 +172,10 @@ const CyberButton = ({
         )}
         data-content={typeof children === 'string' ? children : undefined}
       >
-        {children}
+        {isMobileView ? renderIcon() : children}
       </span>
 
-      {/* 添加全局动画样式 */}
       <style jsx global>{`
-        /* 简化的扫描效果 */
         @keyframes sweep {
           0% {
             background-position: -50% -50%;
@@ -150,7 +190,6 @@ const CyberButton = ({
           background-size: 200% 200%;
         }
 
-        /* 边角出现动画 */
         @keyframes corner-appear {
           0% {
             width: 0;
@@ -171,7 +210,6 @@ const CyberButton = ({
           animation: corner-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* 单次执行的水平故障效果 */
         @keyframes h-glitch-once {
           0% {
             transform: translateX(-100%);
@@ -191,7 +229,6 @@ const CyberButton = ({
           animation: h-glitch-once 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        /* 单次执行的垂直故障效果 */
         @keyframes v-glitch-once {
           0% {
             transform: translateY(-100%);
@@ -211,12 +248,10 @@ const CyberButton = ({
           animation: v-glitch-once 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        /* 噪点纹理 */
         .bg-noise {
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
 
-        /* 文字故障效果 - 单次执行版本 */
         .title-glitch-once {
           position: relative;
           animation: textShift 0.5s ease-out forwards;
@@ -249,23 +284,34 @@ const CyberButton = ({
         }
 
         @keyframes textShift {
-          0%,
-          100% {
+          0% {
             transform: translateX(0);
           }
-          15% {
-            transform: translateX(-2px) skewX(10deg);
+          10% {
+            transform: translateX(-2px);
+          }
+          20% {
+            transform: translateX(2px);
           }
           30% {
-            transform: translateX(2px) skewX(-5deg);
+            transform: translateX(-1px);
           }
-          45% {
+          40% {
+            transform: translateX(1px);
+          }
+          50% {
             transform: translateX(-1px);
           }
           60% {
             transform: translateX(1px);
           }
-          75% {
+          70% {
+            transform: translateX(-1px);
+          }
+          80% {
+            transform: translateX(0px);
+          }
+          100% {
             transform: translateX(0);
           }
         }
@@ -273,33 +319,54 @@ const CyberButton = ({
         @keyframes whiteShadow {
           0% {
             height: 0;
+            opacity: 0;
           }
-          30% {
+          20% {
             height: 100%;
+            opacity: 1;
           }
-          70% {
+          40% {
             height: 30%;
+            opacity: 1;
+          }
+          60% {
+            height: 100%;
+            opacity: 0.5;
+          }
+          80% {
+            height: 30%;
+            opacity: 0.2;
           }
           100% {
             height: 0;
+            opacity: 0;
           }
         }
 
         @keyframes whiteHeight {
           0% {
             height: 0;
+            opacity: 0;
+          }
+          20% {
+            height: 30%;
+            opacity: 1;
           }
           40% {
-            height: 80%;
+            height: 60%;
+            opacity: 1;
           }
           60% {
-            height: 40%;
+            height: 100%;
+            opacity: 0.5;
           }
           80% {
-            height: 20%;
+            height: 50%;
+            opacity: 0.2;
           }
           100% {
             height: 0;
+            opacity: 0;
           }
         }
       `}</style>
