@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cyberpunk AI Input</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .container-ai-input {
+        --perspective: 1000px;
+        --translateY: 45px;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -2.5rem;
+        bottom: -2.5rem;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        transform-style: preserve-3d;
+        background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+      }
+
+      .container-wrap {
+        display: flex;
+        align-items: center;
+        justify-items: center;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translateX(-50%) translateY(-50%);
+        z-index: 9;
+        transform-style: preserve-3d;
+        cursor: pointer;
+        padding: 4px;
+        transition: all 0.3s ease;
+      }
+
+      .container-wrap:hover {
+        padding: 0;
+      }
+
+      .container-wrap:active {
+        transform: translateX(-50%) translateY(-50%) scale(0.95);
+      }
+
+      .container-wrap:after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translateX(-50%) translateY(-55%);
+        width: 12rem;
+        height: 11rem;
+        background-color: rgba(30, 30, 50, 0.8);
+        border-radius: 3.2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 15px rgba(100, 255, 255, 0.3);
+      }
+
+      .container-wrap:hover:after {
+        transform: translateX(-50%) translateY(-50%);
+        height: 12rem;
+        box-shadow: 0 0 25px rgba(100, 255, 255, 0.5);
+      }
+
+      .card {
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        will-change: transform;
+        transition: all 0.6s ease;
+        border-radius: 3rem;
+        display: flex;
+        align-items: center;
+        transform: translateZ(50px);
+        justify-content: center;
+      }
+
+      .card:hover {
+        box-shadow: 0 10px 40px rgba(100, 255, 255, 0.25),
+          inset 0 0 10px rgba(100, 255, 255, 0.3);
+      }
+
+      .background-blur-balls {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translateX(-50%) translateY(-50%);
+        width: 100%;
+        height: 100%;
+        z-index: -10;
+        border-radius: 3rem;
+        transition: all 0.3s ease;
+        background-color: rgba(20, 20, 40, 0.8);
+        overflow: hidden;
+        border: 1px solid rgba(100, 255, 255, 0.2);
+      }
+
+      .balls {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translateX(-50%) translateY(-50%);
+        animation: rotate-background-balls 10s linear infinite;
+      }
+
+      .container-wrap:hover .balls {
+        animation-play-state: paused;
+      }
+
+      .background-blur-balls .ball {
+        width: 6rem;
+        height: 6rem;
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(30px);
+        opacity: 0.8;
+      }
+
+      .background-blur-balls .ball.violet {
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #9d00ff;
+      }
+
+      .background-blur-balls .ball.green {
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #00ff9d;
+      }
+
+      .background-blur-balls .ball.rosa {
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        background-color: #ff009d;
+      }
+
+      .background-blur-balls .ball.cyan {
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        background-color: #00f5ff;
+      }
+
+      .content-card {
+        width: 12rem;
+        height: 12rem;
+        display: flex;
+        border-radius: 3rem;
+        transition: all 0.3s ease;
+        overflow: hidden;
+      }
+
+      .background-blur-card {
+        width: 100%;
+        height: 100%;
+        backdrop-filter: blur(50px);
+      }
+
+      .eyes {
+        position: absolute;
+        left: 50%;
+        bottom: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 52px;
+        gap: 2rem;
+        transition: all 0.3s ease;
+      }
+
+      .eyes .eye {
+        width: 26px;
+        height: 52px;
+        background-color: #00f5ff;
+        border-radius: 16px;
+        animation: animate-eyes 10s infinite linear;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px #00f5ff;
+      }
+
+      .eyes.happy {
+        display: none;
+        color: #00f5ff;
+        gap: 0;
+      }
+
+      .eyes.happy svg {
+        width: 60px;
+        filter: drop-shadow(0 0 5px #00f5ff);
+      }
+
+      .container-wrap:hover .eyes .eye {
+        display: none;
+      }
+
+      .container-wrap:hover .eyes.happy {
+        display: flex;
+      }
+
+      /* 3D hover effects */
+      .area:nth-child(15):hover ~ .container-wrap .card,
+      .area:nth-child(15):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(-15deg)
+          rotateY(15deg) translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(14):hover ~ .container-wrap .card,
+      .area:nth-child(14):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(-15deg) rotateY(7deg)
+          translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(13):hover ~ .container-wrap .card,
+      .area:nth-child(13):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(-15deg) rotateY(0)
+          translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(12):hover ~ .container-wrap .card,
+      .area:nth-child(12):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(-15deg)
+          rotateY(-7deg) translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(11):hover ~ .container-wrap .card,
+      .area:nth-child(11):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(-15deg)
+          rotateY(-15deg) translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+
+      .area:nth-child(10):hover ~ .container-wrap .card,
+      .area:nth-child(10):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(0) rotateY(15deg)
+          translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(9):hover ~ .container-wrap .card,
+      .area:nth-child(9):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(0) rotateY(7deg)
+          translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(8):hover ~ .container-wrap .card,
+      .area:nth-child(8):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(0) rotateY(0)
+          translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(7):hover ~ .container-wrap .card,
+      .area:nth-child(7):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(0) rotateY(-7deg)
+          translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(6):hover ~ .container-wrap .card,
+      .area:nth-child(6):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(0) rotateY(-15deg)
+          translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+
+      .area:nth-child(5):hover ~ .container-wrap .card,
+      .area:nth-child(5):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(15deg) rotateY(15deg)
+          translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(4):hover ~ .container-wrap .card,
+      .area:nth-child(4):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(15deg) rotateY(7deg)
+          translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(3):hover ~ .container-wrap .card,
+      .area:nth-child(3):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(15deg) rotateY(0)
+          translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(2):hover ~ .container-wrap .card,
+      .area:nth-child(2):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(15deg) rotateY(-7deg)
+          translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+      .area:nth-child(1):hover ~ .container-wrap .card,
+      .area:nth-child(1):hover ~ .container-wrap .eyes .eye {
+        transform: perspective(var(--perspective)) rotateX(15deg)
+          rotateY(-15deg) translateZ(var(--translateY)) scale3d(1, 1, 1);
+      }
+
+      @keyframes rotate-background-balls {
+        from {
+          transform: translateX(-50%) translateY(-50%) rotate(360deg);
+        }
+        to {
+          transform: translateX(-50%) translateY(-50%) rotate(0);
+        }
+      }
+
+      @keyframes animate-eyes {
+        46% {
+          height: 52px;
+        }
+        48% {
+          height: 20px;
+        }
+        50% {
+          height: 52px;
+        }
+        96% {
+          height: 52px;
+        }
+        98% {
+          height: 20px;
+        }
+        100% {
+          height: 52px;
+        }
+      }
+
+      /* Cyberpunk glitch effect */
+      @keyframes glitch {
+        0% {
+          text-shadow: 0.05em 0 0 #00ff9d, -0.05em -0.025em 0 #ff009d,
+            -0.025em 0.05em 0 #9d00ff;
+        }
+        14% {
+          text-shadow: 0.05em 0 0 #00ff9d, -0.05em -0.025em 0 #ff009d,
+            -0.025em 0.05em 0 #9d00ff;
+        }
+        15% {
+          text-shadow: -0.05em -0.025em 0 #00ff9d, 0.025em 0.025em 0 #ff009d,
+            -0.05em -0.05em 0 #9d00ff;
+        }
+        49% {
+          text-shadow: -0.05em -0.025em 0 #00ff9d, 0.025em 0.025em 0 #ff009d,
+            -0.05em -0.05em 0 #9d00ff;
+        }
+        50% {
+          text-shadow: 0.025em 0.05em 0 #00ff9d, 0.05em 0 0 #ff009d,
+            0 -0.05em 0 #9d00ff;
+        }
+        99% {
+          text-shadow: 0.025em 0.05em 0 #00ff9d, 0.05em 0 0 #ff009d,
+            0 -0.05em 0 #9d00ff;
+        }
+        100% {
+          text-shadow: -0.025em 0 0 #00ff9d, -0.025em -0.025em 0 #ff009d,
+            -0.025em -0.05em 0 #9d00ff;
+        }
+      }
+
+      /* Scanlines effect */
+      .container-ai-input::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          rgba(100, 255, 255, 0.03) 1px,
+          transparent 1px
+        );
+        background-size: 100% 2px;
+        pointer-events: none;
+        animation: scanline 8s linear infinite;
+      }
+
+      @keyframes scanline {
+        from {
+          background-position: 0 0;
+        }
+        to {
+          background-position: 0 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-ai-input">
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <div class="area"></div>
+      <label class="container-wrap">
+        <div class="card">
+          <div class="background-blur-balls">
+            <div class="balls">
+              <span class="ball rosa"></span>
+              <span class="ball violet"></span>
+              <span class="ball green"></span>
+              <span class="ball cyan"></span>
+            </div>
+          </div>
+          <div class="content-card">
+            <div class="background-blur-card">
+              <div class="eyes">
+                <span class="eye"></span>
+                <span class="eye"></span>
+              </div>
+              <div class="eyes happy">
+                <svg fill="none" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"
+                  ></path>
+                </svg>
+                <svg fill="none" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M8.28386 16.2843C8.9917 15.7665 9.8765 14.731 12 14.731C14.1235 14.731 15.0083 15.7665 15.7161 16.2843C17.8397 17.8376 18.7542 16.4845 18.9014 15.7665C19.4323 13.1777 17.6627 11.1066 17.3088 10.5888C16.3844 9.23666 14.1235 8 12 8C9.87648 8 7.61556 9.23666 6.69122 10.5888C6.33728 11.1066 4.56771 13.1777 5.09858 15.7665C5.24582 16.4845 6.16034 17.8376 8.28386 16.2843Z"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </label>
+    </div>
+  </body>
+</html>
