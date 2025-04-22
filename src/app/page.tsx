@@ -12,16 +12,7 @@ import { data1, data2, data3, data4 } from './mock-data';
 interface RawSystemCard {
   id: string;
   title: string;
-  content: string;
-  status: string;
-  primaryAction: {
-    label: string;
-    command: string;
-  };
-  secondaryAction: {
-    label: string;
-    command: string;
-  };
+  url: string;
 }
 
 // 格式化数据为符合 SystemCard 类型的数据
@@ -31,8 +22,8 @@ const formatData = (data: RawSystemCard[]) => {
     title: item.title,
     // 使用 Emoji 作为默认图标，您可以根据实际需求调整
     icon: getIconForModule(item.id),
-    // 为每个模块生成一个示例URL
-    url: getUrlForModule(item.id),
+    // 直接使用数据中的 URL
+    url: item.url,
   }));
 };
 
@@ -57,27 +48,6 @@ const getIconForModule = (id: string): string => {
     default:
       // 默认图标 - 链接图标
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
-  }
-};
-
-// 生成模块URL
-const getUrlForModule = (id: string): string => {
-  // 为每个模块生成一个示例URL
-  // 在实际应用中，这应该来自真实数据
-  const baseUrl = 'https://example.com/app/';
-  const category = id.split('-')[0];
-
-  switch (category) {
-    case '1':
-      return `${baseUrl}hr/${id}`;
-    case '2':
-      return `${baseUrl}sales/${id}`;
-    case '3':
-      return `${baseUrl}procurement/${id}`;
-    case '4':
-      return `${baseUrl}data/${id}`;
-    default:
-      return `${baseUrl}${id}`;
   }
 };
 
@@ -192,20 +162,8 @@ const Page = () => {
 
   // 处理模块点击
   const handleModuleClick = (moduleId: string) => {
+    // 只设置激活的模块ID，不再处理跳转逻辑（已由CyberSystemModules组件内部处理）
     setActiveModuleId(moduleId);
-
-    // 查找当前模块数据
-    const moduleData = tabs[activeTabIndex].data.find(
-      (item) => item.id === moduleId
-    );
-
-    // 如果找到模块数据且有URL，则打开对应的链接
-    if (moduleData && moduleData.url) {
-      // 延迟执行是为了给UI动画效果留出时间
-      setTimeout(() => {
-        // window.open(moduleData.url, '_blank');
-      }, 800);
-    }
   };
 
   // 使用useCallback缓存计算函数，避免不必要的重渲染
