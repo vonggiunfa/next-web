@@ -71,6 +71,7 @@ const CyberLogo = () => {
         .logo-text {
           font-size: 2.5rem;
           font-weight: 700;
+          text-align: center;
           color: transparent;
           background: linear-gradient(90deg, white, #d0d0d0);
           -webkit-background-clip: text;
