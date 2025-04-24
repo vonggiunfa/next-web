@@ -226,9 +226,9 @@ const Page = () => {
     const moduleTop = moduleRect.top - containerTop;
 
     // 计算斜线高度（确保形成45度角）
-    // 在移动设备上使用更小的垂直距离，更简洁的连接线
+    // 在移动设备上使用更小的垂直距离，但依然保持折线效果
     const verticalDistance = isMobileView
-      ? Math.min((moduleTop - buttonBottom) * 0.2, 40)
+      ? Math.min((moduleTop - buttonBottom) * 0.2, 30)
       : Math.min((moduleTop - buttonBottom) * 0.3, 60);
 
     // 第一个斜线：从按钮底部开始的45度线
@@ -241,14 +241,11 @@ const Page = () => {
     const diagX2 =
       moduleCenterX - (isRightDirection ? verticalDistance : -verticalDistance);
 
-    // 构建完整的路径字符串
-    // 移动设备上简化为直线，桌面则保持原来的折线路径
-    const pathStr = isMobileView
-      ? `M${buttonCenterX},${buttonBottom} L${moduleCenterX},${moduleTop}`
-      : `M${buttonCenterX},${buttonBottom} 
-         L${diagX1},${diagY1} 
-         L${diagX2},${diagY1} 
-         L${moduleCenterX},${moduleTop}`;
+    // 构建完整的路径字符串 - 所有设备上都使用折线路径
+    const pathStr = `M${buttonCenterX},${buttonBottom} 
+                     L${diagX1},${diagY1} 
+                     L${diagX2},${diagY1} 
+                     L${moduleCenterX},${moduleTop}`;
 
     setLinePath(pathStr);
 
