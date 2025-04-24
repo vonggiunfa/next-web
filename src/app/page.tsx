@@ -15,6 +15,7 @@ interface RawSystemCard {
   id: string;
   title: string;
   url: string;
+  description: string;
 }
 
 // 格式化数据为符合 SystemCard 类型的数据
@@ -26,6 +27,7 @@ const formatData = (data: RawSystemCard[]) => {
     icon: getIconForModule(item.id),
     // 直接使用数据中的 URL
     url: item.url,
+    description: item.description,
   }));
 };
 

@@ -10,6 +10,7 @@ export interface SystemCard {
   title: string;
   icon: string; // 图标名称或代码点
   url: string; // 对应的网址
+  description: string; // 描述
 }
 
 // 添加卡片序列动画变体
@@ -32,17 +33,20 @@ const CyberIcon = ({
   icon,
   isActive,
   isHologram,
+  isMobile = false, // 添加移动设备参数
 }: {
   icon: string;
   isActive: boolean;
   isHologram: boolean;
+  isMobile?: boolean;
 }) => {
   return (
     <div
       className={`
-        relative w-20 h-20 mr-5 flex items-center justify-center
+        relative flex items-center justify-center
         ${isHologram ? 'hologram-icon' : ''}
         overflow-visible group
+        ${isMobile ? 'w-12 h-12 mr-3' : 'w-14 h-14 mr-5'}
       `}
     >
       {/* 科技感背景 - 六边形或圆形光晕 */}
@@ -62,7 +66,8 @@ const CyberIcon = ({
         className={`
           relative z-10 transform transition-all duration-300
           ${isActive ? 'scale-110 text-white' : 'text-white/90'}
-          cyber-icon-shadow group-hover:scale-110 w-12 h-12 flex items-center justify-center
+          cyber-icon-shadow group-hover:scale-110 flex items-center justify-center
+          ${isMobile ? 'w-8 h-8' : 'w-12 h-12'}
         `}
       >
         {icon.startsWith('<svg') ? (
@@ -71,7 +76,7 @@ const CyberIcon = ({
             dangerouslySetInnerHTML={{ __html: icon }}
           />
         ) : (
-          <span className="text-3xl">{icon}</span>
+          <span className={isMobile ? 'text-2xl' : 'text-3xl'}>{icon}</span>
         )}
 
         {/* 图标激活时的光晕效果 - 修复居中问题 */}
@@ -86,15 +91,27 @@ const CyberIcon = ({
       </div>
 
       {/* 图标周围的装饰性数据线 */}
-      <div className="absolute -right-2 top-1/2 w-4 h-[1px] bg-white/40 cyber-data-line"></div>
-      <div className="absolute -left-2 top-1/2 w-4 h-[1px] bg-white/40 cyber-data-line-reverse"></div>
-      <div className="absolute -bottom-2 left-1/2 h-4 w-[1px] bg-white/40 cyber-data-line-vertical"></div>
+      <div
+        className={`absolute -right-2 top-1/2 ${
+          isMobile ? 'w-2' : 'w-4'
+        } h-[1px] bg-white/40 cyber-data-line`}
+      ></div>
+      <div
+        className={`absolute -left-2 top-1/2 ${
+          isMobile ? 'w-2' : 'w-4'
+        } h-[1px] bg-white/40 cyber-data-line-reverse`}
+      ></div>
+      <div
+        className={`absolute -bottom-2 left-1/2 ${
+          isMobile ? 'h-2' : 'h-4'
+        } w-[1px] bg-white/40 cyber-data-line-vertical`}
+      ></div>
 
       {/* 交互提示点 */}
       <div
-        className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${
-          isActive ? 'bg-white' : 'bg-white/50'
-        } cyber-pulse`}
+        className={`absolute -top-1 -right-1 ${
+          isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2'
+        } rounded-full ${isActive ? 'bg-white' : 'bg-white/50'} cyber-pulse`}
       ></div>
     </div>
   );
@@ -119,10 +136,30 @@ const CyberSystemModules = ({
     {}
   );
   const [isInitialized, setIsInitialized] = useState(false);
+  // 检测是否为移动设备
+  const [isMobileView, setIsMobileView] = useState(false);
 
   // 引用
   const timeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // 检测屏幕尺寸
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+
+    // 初始检查
+    checkMobileView();
+
+    // 添加屏幕尺寸变化监听
+    window.addEventListener('resize', checkMobileView);
+
+    // 清理函数
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
 
   // 初始化动画
   useEffect(() => {
@@ -139,33 +176,46 @@ const CyberSystemModules = ({
   useEffect(() => {
     if (!data || data.length === 0 || !isInitialized) return;
 
-    const triggerRandomGlitch = () => {
-      const randomCardIndex = Math.floor(Math.random() * data.length);
-      const randomCardId = data[randomCardIndex]?.id;
+    // 使用延迟启动随机故障，避免在初始加载和切换时出现故障效果
+    const startupTimer = setTimeout(() => {
+      const triggerRandomGlitch = () => {
+        // 避免在移动设备上进行过多的视觉效果
+        if (isMobileView) return;
 
-      if (randomCardId) {
-        // 清除之前的计时器
-        if (timeoutsRef.current[randomCardId]) {
-          clearTimeout(timeoutsRef.current[randomCardId]);
+        const randomCardIndex = Math.floor(Math.random() * data.length);
+        const randomCardId = data[randomCardIndex]?.id;
+
+        if (randomCardId) {
+          // 清除之前的计时器
+          if (timeoutsRef.current[randomCardId]) {
+            clearTimeout(timeoutsRef.current[randomCardId]);
+          }
+
+          setGlitchingCards((prev) => ({ ...prev, [randomCardId]: true }));
+
+          // 短暂故障后恢复
+          timeoutsRef.current[randomCardId] = setTimeout(() => {
+            setGlitchingCards((prev) => ({ ...prev, [randomCardId]: false }));
+          }, 800);
         }
+      };
 
-        setGlitchingCards((prev) => ({ ...prev, [randomCardId]: true }));
+      // 设置随机故障触发器 - 在移动设备上降低频率
+      const glitchInterval = setInterval(
+        triggerRandomGlitch,
+        isMobileView ? 10000 : 6000 // 移动设备上降低频率
+      );
 
-        // 短暂故障后恢复
-        timeoutsRef.current[randomCardId] = setTimeout(() => {
-          setGlitchingCards((prev) => ({ ...prev, [randomCardId]: false }));
-        }, 800);
-      }
-    };
-
-    // 设置随机故障触发器
-    const glitchInterval = setInterval(triggerRandomGlitch, 6000);
+      return () => {
+        clearInterval(glitchInterval);
+      };
+    }, 1500); // 延迟1.5秒启动故障效果
 
     return () => {
-      clearInterval(glitchInterval);
+      clearTimeout(startupTimer);
       Object.values(timeoutsRef.current).forEach(clearTimeout);
     };
-  }, [data, isInitialized]);
+  }, [data, isInitialized, isMobileView]);
 
   // 处理卡片点击，对外传递模块点击事件
   const handleCardClick = useCallback(
@@ -176,24 +226,30 @@ const CyberSystemModules = ({
         onModuleClick(card);
       }
 
-      // 触发卡片故障
-      setGlitchingCards((prev) => ({ ...prev, [cardId]: true }));
+      // 在移动设备上使用更简单的过渡效果，避免过多视觉变化导致闪烁
+      if (!isMobileView) {
+        // 触发卡片故障
+        setGlitchingCards((prev) => ({ ...prev, [cardId]: true }));
 
-      // 激活全息效果
-      setHologramCards((prev) => ({ ...prev, [cardId]: true }));
+        // 激活全息效果
+        setHologramCards((prev) => ({ ...prev, [cardId]: true }));
 
-      // 清除之前的计时器
-      if (timeoutsRef.current[cardId]) {
-        clearTimeout(timeoutsRef.current[cardId]);
+        // 清除之前的计时器
+        if (timeoutsRef.current[cardId]) {
+          clearTimeout(timeoutsRef.current[cardId]);
+        }
+
+        // 设置恢复计时器
+        timeoutsRef.current[cardId] = setTimeout(() => {
+          setGlitchingCards((prev) => ({ ...prev, [cardId]: false }));
+          // 全息效果保持到选中状态改变
+        }, 800);
+      } else {
+        // 移动设备上简化处理 - 只激活全息效果，不使用故障效果
+        setHologramCards((prev) => ({ ...prev, [cardId]: true }));
       }
-
-      // 设置恢复计时器
-      timeoutsRef.current[cardId] = setTimeout(() => {
-        setGlitchingCards((prev) => ({ ...prev, [cardId]: false }));
-        // 全息效果保持到选中状态改变
-      }, 800);
     },
-    [onModuleClick]
+    [onModuleClick, isMobileView]
   );
 
   // 当激活的模块变化时，更新全息效果
@@ -218,9 +274,11 @@ const CyberSystemModules = ({
     cardRefs.current[cardId] = el;
   };
 
+  console.log(data);
+
   return (
     <motion.div
-      className="relative w-full max-w-2xl mx-auto"
+      className="relative w-full max-w-lg mx-auto"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -230,37 +288,41 @@ const CyberSystemModules = ({
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px] opacity-30 pointer-events-none" />
 
       {/* 系统模块头部 */}
-      <div className="relative w-full mb-8">
+      <div className="relative w-full mb-4 md:mb-8">
         {/* 模块标题 - 使用白色而非青色 */}
         <h2
-          className="cyber-glitch relative text-center text-3xl font-bold tracking-wider uppercase mb-2"
+          className={`cyber-glitch relative text-center font-bold tracking-wider uppercase mb-2 ${
+            isMobileView ? 'text-2xl' : 'text-3xl'
+          }`}
           data-text={title}
         >
-          <span className="relative inline-block px-6 py-2 text-white">
+          <span className="relative inline-block px-4 md:px-6 py-1 md:py-2 text-white">
             {title}
             <span className="absolute bottom-0 left-[20%] right-[20%] h-[1px] bg-gradient-to-r from-transparent via-white to-transparent"></span>
           </span>
         </h2>
 
         {/* 动态装饰线 - 修改为白色系 */}
-        <div className="flex justify-center items-center space-x-2 mt-3">
-          <div className="w-16 h-[1px] bg-gradient-to-r from-transparent to-white/70"></div>
-          <div className="relative w-3 h-3 flex justify-center items-center">
+        <div className="flex justify-center items-center space-x-2 mt-2 md:mt-3">
+          <div className="w-8 md:w-16 h-[1px] bg-gradient-to-r from-transparent to-white/70"></div>
+          <div className="relative w-2 md:w-3 h-2 md:h-3 flex justify-center items-center">
             <div className="w-1 h-1 bg-white/80"></div>
           </div>
-          <div className="w-32 h-[1px] bg-gradient-to-r from-white/70 to-white/70"></div>
-          <div className="relative w-3 h-3 flex justify-center items-center">
+          <div className="w-16 md:w-32 h-[1px] bg-gradient-to-r from-white/70 to-white/70"></div>
+          <div className="relative w-2 md:w-3 h-2 md:h-3 flex justify-center items-center">
             <div className="w-1 h-1 bg-white/80"></div>
           </div>
-          <div className="w-16 h-[1px] bg-gradient-to-r from-white/70 to-transparent"></div>
+          <div className="w-8 md:w-16 h-[1px] bg-gradient-to-r from-white/70 to-transparent"></div>
         </div>
       </div>
 
       {/* 模块卡片垂直列表 */}
-      <div className="flex flex-col gap-6 px-4">
+      <div className="flex flex-col gap-3 md:gap-6 px-2 md:px-4">
         {data.map((card, index) => {
           const isActive = activeModule === card.id;
           const isHologram = hologramCards[card.id] || false;
+          // 在移动设备上禁用随机故障视觉效果
+          const hasGlitch = !isMobileView && glitchingCards[card.id];
 
           return (
             <motion.div
@@ -270,16 +332,17 @@ const CyberSystemModules = ({
               animate="visible"
               variants={cardVariants}
               className={`
-                relative p-5 h-auto min-h-24 flex items-center
+                relative flex items-center
                 bg-black/40 backdrop-blur-sm border border-white/30
                 hover:border-white/60 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)]
                 hover:-translate-y-1 cursor-pointer transform-gpu transition-all duration-300
+                ${isMobileView ? 'p-3 min-h-16' : 'p-5 min-h-24'}
                 ${
                   isActive
                     ? 'border-white/80 shadow-[0_0_15px_rgba(255,255,255,0.4)]'
                     : ''
                 }
-                ${glitchingCards[card.id] ? 'cyber-glitch-active' : ''}
+                ${hasGlitch ? 'cyber-glitch-active' : ''}
                 ${isHologram ? 'hologram-active' : ''}
               `}
               onClick={() => handleCardClick(card)}
@@ -290,7 +353,7 @@ const CyberSystemModules = ({
               <div className="absolute inset-0 bg-[linear-gradient(transparent_0%,transparent_97%,rgba(255,255,255,0.15)_100%)] bg-[length:100%_3px] opacity-20 pointer-events-none" />
 
               {/* 全息投影效果 - 当卡片激活时显示 */}
-              {isHologram && (
+              {isHologram && !isMobileView && (
                 <>
                   <div className="absolute inset-0 cyber-hologram animate-hologram"></div>
                   <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
@@ -301,26 +364,39 @@ const CyberSystemModules = ({
                 </>
               )}
 
+              {/* 移动设备上使用简化的激活效果 */}
+              {isHologram && isMobileView && (
+                <div className="absolute inset-0 bg-white/5"></div>
+              )}
+
               {/* 角落装饰 - 增强选中效果 */}
               <div
-                className={`absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 ${
+                className={`absolute top-0 left-0 border-t-2 border-l-2 ${
                   isActive ? 'border-white' : 'border-white/30'
-                } transition-colors duration-300`}
+                } transition-colors duration-300 ${
+                  isMobileView ? 'w-3 h-3' : 'w-4 h-4'
+                }`}
               ></div>
               <div
-                className={`absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 ${
+                className={`absolute top-0 right-0 border-t-2 border-r-2 ${
                   isActive ? 'border-white' : 'border-white/30'
-                } transition-colors duration-300`}
+                } transition-colors duration-300 ${
+                  isMobileView ? 'w-3 h-3' : 'w-4 h-4'
+                }`}
               ></div>
               <div
-                className={`absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 ${
+                className={`absolute bottom-0 left-0 border-b-2 border-l-2 ${
                   isActive ? 'border-white' : 'border-white/30'
-                } transition-colors duration-300`}
+                } transition-colors duration-300 ${
+                  isMobileView ? 'w-3 h-3' : 'w-4 h-4'
+                }`}
               ></div>
               <div
-                className={`absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 ${
+                className={`absolute bottom-0 right-0 border-b-2 border-r-2 ${
                   isActive ? 'border-white' : 'border-white/30'
-                } transition-colors duration-300`}
+                } transition-colors duration-300 ${
+                  isMobileView ? 'w-3 h-3' : 'w-4 h-4'
+                }`}
               ></div>
 
               {/* 卡片内容 - 改进的布局 */}
@@ -330,6 +406,7 @@ const CyberSystemModules = ({
                   icon={card.icon}
                   isActive={isActive}
                   isHologram={isHologram}
+                  isMobile={isMobileView}
                 />
 
                 {/* 标题和URL - 右侧内容区 */}
@@ -337,12 +414,9 @@ const CyberSystemModules = ({
                   <div className="flex items-center justify-between">
                     <span
                       className={`
-                        uppercase tracking-wider font-bold text-white text-lg 
-                        ${
-                          glitchingCards[card.id]
-                            ? 'cyber-glitch cyber-glitch-active'
-                            : ''
-                        }
+                        uppercase tracking-wider font-bold text-white 
+                        ${isMobileView ? 'text-base' : 'text-lg'}
+                        ${hasGlitch ? 'cyber-glitch cyber-glitch-active' : ''}
                       `}
                       data-text={card.title}
                     >
@@ -350,19 +424,33 @@ const CyberSystemModules = ({
                     </span>
 
                     {/* 右上角装饰性标签 */}
-                    <div className="bg-white/10 backdrop-blur-sm px-2 py-0.5 text-xs text-white/70 border border-white/20 rounded">
+                    <div
+                      className={`bg-white/10 backdrop-blur-sm border border-white/20 rounded ${
+                        isMobileView
+                          ? 'px-1 py-0.5 text-[10px]'
+                          : 'px-2 py-0.5 text-xs'
+                      } text-white/70`}
+                    >
                       ID: {card.id}
                     </div>
                   </div>
 
                   {/* 水平分割线 */}
-                  <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent my-2"></div>
+                  <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent my-1 md:my-2"></div>
 
                   {/* 网址 */}
                   <div className="flex items-center">
-                    <div className="text-white/60 bg-white/5 backdrop-blur-sm border border-white/10 px-2 py-1 rounded text-xs w-full">
+                    <div
+                      className={`flex items-center text-white/60 bg-white/5 backdrop-blur-sm border border-white/10 rounded w-full ${
+                        isMobileView
+                          ? 'px-1.5 py-0.5 text-[10px]'
+                          : 'px-2 py-1 text-xs'
+                      }`}
+                    >
                       <span className="mr-1 text-white/70">●</span>
-                      <span className="truncate cyber-link">{card.url}</span>
+                      <span className="truncate cyber-link">
+                        {card.description}
+                      </span>
                     </div>
                   </div>
                 </div>
