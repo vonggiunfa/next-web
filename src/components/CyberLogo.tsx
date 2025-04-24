@@ -3,12 +3,30 @@
 import { useEffect, useState } from 'react';
 
 const CyberLogo = () => {
-  // 使用状态管理组件是否已加载
+  // 使用状态管理组件是否已加载和检测设备类型
   const [isClient, setIsClient] = useState(false);
+  const [screenWidth, setScreenWidth] = useState(0);
 
-  // 组件挂载后设置客户端状态
+  // 组件挂载后设置客户端状态并检测屏幕宽度
   useEffect(() => {
     setIsClient(true);
+
+    // 初始化屏幕宽度
+    if (typeof window !== 'undefined') {
+      setScreenWidth(window.innerWidth);
+
+      // 监听窗口大小变化
+      const handleResize = () => {
+        setScreenWidth(window.innerWidth);
+      };
+
+      window.addEventListener('resize', handleResize);
+
+      // 清理函数
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
   }, []);
 
   // 在客户端渲染之前不渲染任何内容
@@ -49,7 +67,13 @@ const CyberLogo = () => {
         }
 
         .logo-cc {
-          font-size: 5rem;
+          font-size: ${screenWidth <= 375
+            ? '3rem'
+            : screenWidth <= 480
+            ? '3.5rem'
+            : screenWidth <= 640
+            ? '4rem'
+            : '5rem'};
           font-weight: 900;
           background: linear-gradient(
             135deg,
@@ -59,17 +83,24 @@ const CyberLogo = () => {
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
-          text-shadow: 0 0 15px rgba(220, 220, 240, 0.8),
-            0 0 20px rgba(139, 255, 235, 0.7);
-          letter-spacing: 5px;
+          text-shadow: ${screenWidth <= 480
+            ? '0 0 10px rgba(220, 220, 240, 0.8), 0 0 15px rgba(139, 255, 235, 0.7)'
+            : '0 0 15px rgba(220, 220, 240, 0.8), 0 0 20px rgba(139, 255, 235, 0.7)'};
+          letter-spacing: ${screenWidth <= 480 ? '3px' : '5px'};
           position: relative;
           z-index: 2;
-          margin-bottom: 0.8rem;
-          transform: translateY(-8px);
+          margin-bottom: ${screenWidth <= 480 ? '0.5rem' : '0.8rem'};
+          transform: translateY(${screenWidth <= 480 ? '-5px' : '-8px'});
         }
 
         .logo-text {
-          font-size: 2.5rem;
+          font-size: ${screenWidth <= 375
+            ? '1.2rem'
+            : screenWidth <= 480
+            ? '1.5rem'
+            : screenWidth <= 640
+            ? '2rem'
+            : '2.5rem'};
           font-weight: 700;
           text-align: center;
           color: transparent;
@@ -77,25 +108,32 @@ const CyberLogo = () => {
           -webkit-background-clip: text;
           background-clip: text;
           text-transform: uppercase;
-          letter-spacing: 10px;
+          letter-spacing: ${screenWidth <= 375
+            ? '4px'
+            : screenWidth <= 480
+            ? '6px'
+            : screenWidth <= 640
+            ? '8px'
+            : '10px'};
           position: relative;
           z-index: 1;
-          text-shadow: 0 0 12px rgba(255, 255, 255, 0.7),
-            0 0 16px rgba(200, 200, 240, 0.6);
+          text-shadow: ${screenWidth <= 480
+            ? '0 0 8px rgba(255, 255, 255, 0.7), 0 0 12px rgba(200, 200, 240, 0.6)'
+            : '0 0 12px rgba(255, 255, 255, 0.7), 0 0 16px rgba(200, 200, 240, 0.6)'};
         }
 
         .logo-text::before {
           content: '';
           position: absolute;
           width: 100%;
-          height: 2px;
+          height: ${screenWidth <= 480 ? '1px' : '2px'};
           background: linear-gradient(
             90deg,
             transparent,
             rgba(255, 255, 255, 0.8),
             transparent
           );
-          bottom: -10px;
+          bottom: ${screenWidth <= 480 ? '-6px' : '-10px'};
           left: 0;
           transform: scaleX(0);
           transform-origin: left;
@@ -106,14 +144,14 @@ const CyberLogo = () => {
           content: '';
           position: absolute;
           width: 100%;
-          height: 2px;
+          height: ${screenWidth <= 480 ? '1px' : '2px'};
           background: linear-gradient(
             90deg,
             transparent,
             rgba(255, 255, 255, 0.8),
             transparent
           );
-          top: -10px;
+          top: ${screenWidth <= 480 ? '-6px' : '-10px'};
           left: 0;
           transform: scaleX(0);
           transform-origin: right;
@@ -122,8 +160,20 @@ const CyberLogo = () => {
 
         .logo-glow {
           position: absolute;
-          width: 350px;
-          height: 350px;
+          width: ${screenWidth <= 375
+            ? '220px'
+            : screenWidth <= 480
+            ? '250px'
+            : screenWidth <= 640
+            ? '300px'
+            : '350px'};
+          height: ${screenWidth <= 375
+            ? '220px'
+            : screenWidth <= 480
+            ? '250px'
+            : screenWidth <= 640
+            ? '300px'
+            : '350px'};
           background: radial-gradient(
             circle,
             rgba(255, 255, 255, 0.35),
@@ -134,7 +184,7 @@ const CyberLogo = () => {
           left: 50%;
           transform: translate(-50%, -50%);
           border-radius: 50%;
-          filter: blur(25px);
+          filter: blur(${screenWidth <= 480 ? '15px' : '25px'});
           z-index: 0;
           animation: glow-float 4s ease-in-out infinite;
         }
@@ -183,7 +233,8 @@ const CyberLogo = () => {
             transform: translateY(0) rotateY(0);
           }
           50% {
-            transform: translateY(-10px) rotateY(2deg);
+            transform: translateY(${screenWidth <= 480 ? '-5px' : '-10px'})
+              rotateY(2deg);
           }
         }
 
@@ -195,7 +246,8 @@ const CyberLogo = () => {
           }
           50% {
             opacity: 0.85;
-            transform: translate(-50%, -60%) scale(1.1);
+            transform: translate(-50%, ${screenWidth <= 480 ? '-55%' : '-60%'})
+              scale(1.1);
           }
         }
 
